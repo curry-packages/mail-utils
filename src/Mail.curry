@@ -4,7 +4,7 @@
 --- environment.
 ---
 --- @author Michael Hanus
---- @version May 2007
+--- @version May 2017
 --- @category web
 ---------------------------------------------------------------------------
 
@@ -27,6 +27,7 @@ sendMail from to subject = sendMailWithOptions from subject [TO to]
 --- @cons BCC - recipient of a blind carbon copy
 --- @cons TO  - recipient of the email
 data MailOption = CC String | BCC String | TO String
+ deriving Eq
 
 --- Sends an email via mailx command and various options.
 --- Note that multiple options are allowed, e.g., more than one CC option

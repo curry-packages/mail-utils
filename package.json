@@ -1,14 +1,16 @@
 {
     "name": "mail-utils",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "author": "Michael Hanus <mh@informatik.uni-kiel.de>",
     "synopsis": "Library with operations for sending emails.",
     "category": [ "Web" ],
-    "dependencies": { },
+    "dependencies": {
+        "base": ">= 1.0.0, < 2.0.0",
+    },
     "exportedModules": [ "Mail" ],
     "compilerCompatibility": {
-        "pakcs": ">= 1.14.0, < 2.0.0",
-        "kics2": ">= 0.5.0,  < 2.0.0"
+        "pakcs": ">= 2.0.0",
+        "kics2": ">= 2.0.0"
     },
     "license": "BSD-3-Clause",
     "licenseFile": "LICENSE",
