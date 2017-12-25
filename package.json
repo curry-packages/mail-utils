@@ -1,5 +1,5 @@
 {
-    "name": "mail",
+    "name": "mail-utils",
     "version": "1.0.0",
     "author": "Michael Hanus <mh@informatik.uni-kiel.de>",
     "synopsis": "Library with operations for sending emails.",
@@ -13,7 +13,7 @@
     "license": "BSD-3-Clause",
     "licenseFile": "LICENSE",
     "source": {
-        "git": "https://git.ps.informatik.uni-kiel.de/curry-packages/mail.git",
+        "git": "https://git.ps.informatik.uni-kiel.de/curry-packages/mail-utils.git",
         "tag": "$version"
     }
 }
