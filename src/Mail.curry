@@ -4,15 +4,18 @@
 --- environment.
 ---
 --- @author Michael Hanus
---- @version May 2017
---- @category web
+--- @version May 2018
 ---------------------------------------------------------------------------
 
-module Mail(sendMail,MailOption(..),sendMailWithOptions) where
+module Mail ( sendMail, MailOption(..), sendMailWithOptions )
+ where
 
-import List(intersperse)
-import IOExts(execCmd)
-import IO(hPutStrLn,hClose)
+import Directory ( doesFileExist )
+import FilePath  ( (</>) )
+import IOExts    ( execCmd )
+import IO        ( hClose, hPutStrLn )
+import List      ( splitOn )
+import System    ( getEnviron )
 
 --- Sends an email via mailx command.
 --- @param from - the email address of the sender
@@ -42,17 +45,22 @@ data MailOption = CC String | BCC String | TO String
 --- @param contents - the contents of the email
 sendMailWithOptions :: String -> String -> [MailOption] -> String -> IO ()
 sendMailWithOptions from subject options contents = do
-  -- if mailx has the option -r:
-  --execMailCmd ("mailx -n -r \""++from++"\" -s \""++subject++"\" "++
-  -- if mailx has the option -a:
-  execMailCmd ("mailx -n -a \"From: "++from++"\" -s \""++subject++"\" "++
-              (if null bccs then "" else "-b \""++bccs++"\" ") ++
-              (if null ccs  then "" else "-c \""++ccs++"\" ") ++"\""++tos++"\"")
-              contents
+  mailcmdexists <- fileInPath "mailx"
+  if mailcmdexists
+    then
+      -- if mailx has the option -r:
+      --execMailCmd ("mailx -n -r \"" ++ from ++ "\" -s \"" ++ subject++"\" "++
+      -- if mailx has the option -a:
+      execMailCmd
+        ("mailx -n -a \"From: " ++ from ++ "\" -s \"" ++ subject ++ "\" " ++
+         (if null bccs then "" else "-b \""++bccs++"\" ") ++
+         (if null ccs  then "" else "-c \""++ccs++"\" ") ++ "\"" ++ tos ++ "\"")
+        contents
+    else error "Command 'mailx' not found in path!"
  where
-   tos  = concat (intersperse " " [ s | TO s <- options ])
-   ccs  = concat (intersperse " " [ s | CC s <- options ])
-   bccs = concat (intersperse " " [ s | BCC s <- options ])
+   tos  = unwords [ s | TO  s <- options ]
+   ccs  = unwords [ s | CC  s <- options ]
+   bccs = unwords [ s | BCC s <- options ]
 
 --- Executes a command to send an email and pass the contents via stdin.
 --- Note that \r characters in the contents are removed due to problems
@@ -65,3 +73,14 @@ execMailCmd cmd contents = do
  where
   isUnixChar c = c /= '\r'
 
+---------------------------------------------------------------------------
+-- Auxiliaries:
+
+--- Checks whether a file exists in one of the directories on the PATH.
+fileInPath :: String -> IO Bool
+fileInPath file = do
+  path <- getEnviron "PATH"
+  let dirs = splitOn ":" path
+  (liftIO (any id)) $ mapIO (doesFileExist . (</> file)) dirs
+
+---------------------------------------------------------------------------
