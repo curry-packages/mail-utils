@@ -1,12 +1,10 @@
 {
     "name": "mail-utils",
-    "version": "2.0.0",
+    "version": "3.0.0",
     "author": "Michael Hanus <mh@informatik.uni-kiel.de>",
     "synopsis": "Library with operations for sending emails.",
     "category": [ "Web" ],
-    "dependencies": {
-        "base": ">= 1.0.0, < 2.0.0"
-    },
+    "dependencies": { },
     "exportedModules": [ "Mail" ],
     "compilerCompatibility": {
         "pakcs": ">= 2.0.0",

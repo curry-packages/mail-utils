@@ -10,12 +10,12 @@
 module Mail ( sendMail, MailOption(..), sendMailWithOptions )
  where
 
-import Directory ( doesFileExist )
-import FilePath  ( (</>) )
-import IOExts    ( execCmd )
-import IO        ( hClose, hPutStrLn )
-import List      ( splitOn )
-import System    ( getEnviron )
+import Data.List          ( splitOn )
+import System.Environment ( getEnv )
+import System.Directory   ( doesFileExist )
+import System.FilePath    ( (</>) )
+import System.IO          ( hClose, hPutStrLn )
+import IOExts             ( execCmd )
 
 --- Sends an email via mailx command.
 --- @param from - the email address of the sender
@@ -79,7 +79,7 @@ execMailCmd cmd contents = do
 --- Checks whether a file exists in one of the directories on the PATH.
 fileInPath :: String -> IO Bool
 fileInPath file = do
-  path <- getEnviron "PATH"
+  path <- getEnv "PATH"
   let dirs = splitOn ":" path
   (liftIO (any id)) $ mapIO (doesFileExist . (</> file)) dirs
 
