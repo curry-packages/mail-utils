@@ -4,18 +4,20 @@
 --- environment.
 ---
 --- @author Michael Hanus
---- @version May 2018
+--- @version November 2018
 ---------------------------------------------------------------------------
 
 module Mail ( sendMail, MailOption(..), sendMailWithOptions )
  where
 
-import Directory ( doesFileExist )
-import FilePath  ( (</>) )
-import IOExts    ( execCmd )
-import IO        ( hClose, hPutStrLn )
-import List      ( splitOn )
-import System    ( getEnviron )
+import Directory   ( doesFileExist )
+import FilePath    ( (</>) )
+import IOExts      ( execCmd )
+import IO          ( hClose, hPutStrLn )
+import List        ( splitOn )
+import System      ( getEnviron )
+
+import System.Path ( fileInPath )
 
 --- Sends an email via mailx command.
 --- @param from - the email address of the sender
@@ -72,15 +74,5 @@ execMailCmd cmd contents = do
   hClose sin
  where
   isUnixChar c = c /= '\r'
-
----------------------------------------------------------------------------
--- Auxiliaries:
-
---- Checks whether a file exists in one of the directories on the PATH.
-fileInPath :: String -> IO Bool
-fileInPath file = do
-  path <- getEnviron "PATH"
-  let dirs = splitOn ":" path
-  (liftIO (any id)) $ mapIO (doesFileExist . (</> file)) dirs
 
 ---------------------------------------------------------------------------
