@@ -4,7 +4,7 @@
 --- environment.
 ---
 --- @author Michael Hanus
---- @version November 2018
+--- @version August 2020
 ---------------------------------------------------------------------------
 
 module Mail ( sendMail, MailOption(..), sendMailWithOptions )
@@ -12,10 +12,9 @@ module Mail ( sendMail, MailOption(..), sendMailWithOptions )
 
 import Directory   ( doesFileExist )
 import FilePath    ( (</>) )
-import IOExts      ( execCmd )
-import IO          ( hClose, hPutStrLn )
+import IOExts      ( evalCmd )
+import IO          ( hClose, hPutStrLn, stderr )
 import List        ( splitOn )
-import System      ( getEnviron )
 
 import System.Path ( fileInPath )
 
@@ -53,10 +52,12 @@ sendMailWithOptions from subject options contents = do
       -- if mailx has the option -r:
       --execMailCmd ("mailx -n -r \"" ++ from ++ "\" -s \"" ++ subject++"\" "++
       -- if mailx has the option -a:
-      execMailCmd
-        ("mailx -n -a \"From: " ++ from ++ "\" -s \"" ++ subject ++ "\" " ++
-         (if null bccs then "" else "-b \""++bccs++"\" ") ++
-         (if null ccs  then "" else "-c \""++ccs++"\" ") ++ "\"" ++ tos ++ "\"")
+      execMailCmd "mailx"
+        (["-n", "-a", "\"From: " ++ from ++ "\"",
+          "-s", "\"" ++ subject ++ "\""] ++
+         (if null bccs then [] else ["-b", "\""++bccs++"\""]) ++
+         (if null ccs  then [] else ["-c", "\""++ccs++"\""]) ++
+         ["\"" ++ tos ++ "\""])
         contents
     else error "Command 'mailx' not found in path!"
  where
@@ -67,11 +68,12 @@ sendMailWithOptions from subject options contents = do
 --- Executes a command to send an email and pass the contents via stdin.
 --- Note that \r characters in the contents are removed due to problems
 --- with such contents in some Unix environments.
-execMailCmd :: String -> String -> IO ()
-execMailCmd cmd contents = do
-  (sin,_,_) <- execCmd cmd
-  hPutStrLn sin (filter isUnixChar contents)
-  hClose sin
+execMailCmd :: String -> [String] -> String -> IO ()
+execMailCmd cmd args contents = do
+  (rc,out,err) <- evalCmd cmd args (filter isUnixChar contents)
+  unless (rc == 0) $ putStrLn "ERROR during sending email!"
+  unless (null out) $ putStrLn out
+  unless (null err) $ hPutStrLn stderr err
  where
   isUnixChar c = c /= '\r'
 
