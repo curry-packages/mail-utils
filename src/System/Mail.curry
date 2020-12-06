@@ -4,19 +4,21 @@
 --- environment.
 ---
 --- @author Michael Hanus
---- @version August 2020
+--- @version December 2020
 ---------------------------------------------------------------------------
 
-module Mail ( sendMail, MailOption(..), sendMailWithOptions )
+module System.Mail ( sendMail, MailOption(..), sendMailWithOptions )
  where
 
-import Directory   ( doesFileExist )
-import FilePath    ( (</>) )
-import IOExts      ( evalCmd )
-import IO          ( hClose, hPutStrLn, stderr )
-import List        ( splitOn )
+import Control.Monad    ( unless )
+import Data.List        ( splitOn )
+import System.IO        ( hClose, hPutStrLn, stderr )
 
-import System.Path ( fileInPath )
+import System.Directory ( doesFileExist )
+import System.FilePath  ( (</>) )
+import System.IOExts    ( evalCmd )
+import System.Path      ( fileInPath )
+
 
 --- Sends an email via mailx command.
 --- @param from - the email address of the sender
