@@ -4,7 +4,7 @@
 --- environment.
 ---
 --- @author Michael Hanus
---- @version August 2020
+--- @version February 2021
 ---------------------------------------------------------------------------
 
 module Mail ( sendMail, MailOption(..), sendMailWithOptions )
@@ -53,17 +53,14 @@ sendMailWithOptions from subject options contents = do
       --execMailCmd ("mailx -n -r \"" ++ from ++ "\" -s \"" ++ subject++"\" "++
       -- if mailx has the option -a:
       execMailCmd "mailx"
-        (["-n", "-a", "\"From: " ++ from ++ "\"",
-          "-s", "\"" ++ subject ++ "\""] ++
-         (if null bccs then [] else ["-b", "\""++bccs++"\""]) ++
-         (if null ccs  then [] else ["-c", "\""++ccs++"\""]) ++
-         ["\"" ++ tos ++ "\""])
+        (["-n", "-a", "From: " ++ from, "-s", subject] ++ ccs ++ bccs ++ tos)
         contents
     else error "Command 'mailx' not found in path!"
  where
-   tos  = unwords [ s | TO  s <- options ]
-   ccs  = unwords [ s | CC  s <- options ]
-   bccs = unwords [ s | BCC s <- options ]
+   tos  = [ s | TO  s <- options ]
+   ccs  = concatMap (\m -> ["-a", "Cc: "  ++ m]) [ s | CC  s <- options ]
+   bccs = concatMap (\m -> ["-a", "Bcc: " ++ m]) [ s | BCC s <- options ]
+
 
 --- Executes a command to send an email and pass the contents via stdin.
 --- Note that \r characters in the contents are removed due to problems
