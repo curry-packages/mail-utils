@@ -4,22 +4,31 @@
 --- environment.
 ---
 --- @author Michael Hanus
---- @version February 2021
+--- @version June 2023
 ---------------------------------------------------------------------------
 
-module System.Mail ( sendMail, MailOption(..), sendMailWithOptions )
+module System.Mail
+  ( MailOption(..), sendMail, sendMailWithOptions
+  , showSendMail, showSendMailWithOptions
+  )
  where
 
 import Control.Monad    ( unless )
-import Data.List        ( splitOn )
-import System.IO        ( hClose, hPutStrLn, stderr )
+import Data.List        ( intercalate )
+import System.IO        ( hPutStrLn, stderr )
 
-import System.Directory ( doesFileExist )
-import System.FilePath  ( (</>) )
 import System.IOExts    ( evalCmd )
 import System.Path      ( fileInPath )
 
+---------------------------------------------------------------------------
+--- Options for sending emails.
+--- @cons CC  - recipient of a carbon copy
+--- @cons BCC - recipient of a blind carbon copy
+--- @cons TO  - recipient of the email
+data MailOption = CC String | BCC String | TO String
+ deriving Eq
 
+---------------------------------------------------------------------------
 --- Sends an email via mailx command.
 --- @param from - the email address of the sender
 --- @param to - the email address of the recipient
@@ -27,13 +36,6 @@ import System.Path      ( fileInPath )
 --- @param contents - the contents of the email
 sendMail :: String -> String -> String -> String -> IO ()
 sendMail from to subject = sendMailWithOptions from subject [TO to]
-
---- Options for sending emails.
---- @cons CC  - recipient of a carbon copy
---- @cons BCC - recipient of a blind carbon copy
---- @cons TO  - recipient of the email
-data MailOption = CC String | BCC String | TO String
- deriving Eq
 
 --- Sends an email via mailx command and various options.
 --- Note that multiple options are allowed, e.g., more than one CC option
@@ -59,9 +61,9 @@ sendMailWithOptions from subject options contents = do
         contents
     else error "Command 'mailx' not found in path!"
  where
-   tos  = [ s | TO  s <- options ]
-   ccs  = concatMap (\m -> ["-a", "Cc: "  ++ m]) [ s | CC  s <- options ]
-   bccs = concatMap (\m -> ["-a", "Bcc: " ++ m]) [ s | BCC s <- options ]
+  tos  = [ s | TO  s <- options ]
+  ccs  = concatMap (\m -> ["-a", "Cc: "  ++ m]) [ s | CC  s <- options ]
+  bccs = concatMap (\m -> ["-a", "Bcc: " ++ m]) [ s | BCC s <- options ]
 
 
 --- Executes a command to send an email and pass the contents via stdin.
@@ -75,5 +77,41 @@ execMailCmd cmd args contents = do
   unless (null err) $ hPutStrLn stderr err
  where
   isUnixChar c = c /= '\r'
+
+---------------------------------------------------------------------------
+-- Operations for testing and debugging.
+
+--- Shows the text (wth subject, sender, and recipient) of an email
+--- to be sent with the command 'sendMailWithOptions' but actually
+--- does not send it.
+--- This is useful for debugging or testing before really sending emails.
+---
+--- @param from - the email address of the sender
+--- @param to - the email address of the recipient
+--- @param subject - the subject of the email
+--- @param contents - the contents of the email
+showSendMail :: String -> String -> String -> String -> String
+showSendMail from to subject = showSendMailWithOptions from subject [TO to]
+
+--- Shows the text (wth subject, sender, and recipient) of an email
+--- to be sent with the command 'sendMailWithOptions' but actually
+--- does not send it.
+--- This is useful for debugging or testing before really sending emails.
+---
+--- @param from - the email address of the sender
+--- @param subject - the subject of the email
+--- @param options - send options, e.g., multiple recipients
+--- @param contents - the contents of the email
+showSendMailWithOptions :: String -> String -> [MailOption] -> String -> String
+showSendMailWithOptions from subject options contents = unlines $
+  [ "From: " ++ from
+  , "To  : " ++ intercalate ", " tos ] ++
+  (if null ccs  then [] else ["Cc  : " ++ intercalate ", " ccs ]) ++
+  (if null bccs then [] else ["Bcc : " ++ intercalate ", " bccs]) ++
+  [ "Subject: " ++ subject, "", contents, "" ]
+ where
+  tos  = [ s | TO  s <- options ]
+  ccs  = [ s | CC  s <- options ]
+  bccs = [ s | BCC s <- options ]
 
 ---------------------------------------------------------------------------
